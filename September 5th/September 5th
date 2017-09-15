@@ -1,0 +1,78 @@
+create table customer (custo INT, firstname STRING, lastname STRING, age INT, profession STRING)
+row format delimited
+fields terminated by ','
+stored as textfile;
+
+
+LOAD DATA LOCAL INPATH '/home/franklin/custs.csv' OVERWRITE INTO TABLE customer;
+
+select * from customer;
+
+Q 1. using customer table
+find total count of customers for each profession. display the order on total count in desc form
+---------------------------------------------------------------------------------------------
+
+select profession, count(*) as total from customer group by profession order by total desc limit 10;
+
+
+insert overwrite local directory '/home/franklin/niit/hive/custount1' row format delimited fields terminated by ','
+select profession, count(*) as total from customer group by profession order by total desc limit 10;
+
+
+create table txnsrecords(txnno INT,txndate STRING, custno INT, amout DOUBLE,
+category STRING, product STRING, city STRING, state STRING, spendby STRING)
+row format delimited
+fields terminated by ','
+stored as textfile;
+
+LOAD DATA LOCAL INPATH '/home/franklin/tranx.csv' OVERWRITE INto TABLE txnsrecords;
+
+select * from txnsrecords;
+
+
+Q 2. customer and sales data 
+find out the list top 10 buyers
+
+
+select a.custno, b.firstname, b.lastname, round(sum(a.amout),2) as total from txnsrecords a, customer b where a.custno=b.custo group by a.custno, b.firstname, b.lastname order by total desc limit 10;
+
+insert overwrite directory '/niit/hive/txnscount' row format delimited fields terminated by ','
+select a.custno, b.firstname, b.lastname, round(sum(a.amout),2) as total from txnsrecords a, customer b where a.custno=b.custo group by a.custno, b.firstname, b.lastname order by total desc limit 10;
+-----------------------------------------------------------------------
+
+create table nysetable (exname STRING, stockid STRING, exdate STRING, openp DOUBLE, highp DOUBLE, lowp DOUBLE,
+closep DOUBLE, volume BIGINT,adjcls DOUBLE)
+row format delimited
+fields terminated by ','
+stored as textfile;
+
+LOAD DATA LOCAL INPATH '/home/franklin/NYSE.csv' OVERWRITE INTO TABLE nysetable;
+
+select * from nysetable;
+
+
+Q 3. NYSE data
+1. to find the total stock volume for each stock
+
+
+select stockid, sum(volume) as totalvol from nysetable group by stockid;
+
+insert overwrite directory '/niit/hive/nyseq1'
+row format delimited
+fields terminated by ','
+select stockid, sum(volume) as totalvol from nysetable group by stockid;
+
+2. Find max varience for each stock
+
+select stockid, max((highp-lowp)/(lowp)*100) as var from nysetable group by stockid;
+
+insert overwrite directory '/niit/hive/nyseq2'
+row format delimited
+fields terminated by ','
+select stockid, max((highp-lowp)/(lowp)*100) as var from nysetable group by stockid;
+
+
+
+
+
+
