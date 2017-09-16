@@ -1,0 +1,82 @@
+create table txnrecords(txnno INT,txndate STRING,custno INT,amount DOUBLE,category STRING,product STRING, city STRING,state STRING,
+spendby STRING)
+row format delimited
+fields terminated by ','
+stored as textfile;
+
+LOAD DATA LOCAL INPATH '/home/franklin/txns1.txt' OVERWRITE INTO TABLE txnrecords;
+
+select * from txnrecords;
+
+
+create table txnrecsByCat (txnno INT, txndate STRING, custno INT, amount DOUBLE,
+product STRING, city STRING,state STRING, spendby STRING)
+partitioned by (category STRING)
+row format delimited
+fields terminated by ','
+stored as textfile;
+
+set hive.exec.dynamic.partition.mode=nonstrict;
+set hive.exec.dynamic.partition=true;
+
+from txnrecords txn INSERT OVERWRITE TABLE txnrecsByCat PARTITION(category) 
+select txn.txnno, txn.txndate, txn.custno, txn.amount, txn.product, txn.city, txn.state, txn.spendby, txn.category DISTRIBUTE BY category;
+
+
+
+create table txnrecsByCat2(txnno INT, txndate STRING, custno INT, amount DOUBLE,
+product STRING, city STRING, state STRING, spendby STRING)
+partitioned by (category STRING)
+clustered by (state) into 10 buckets
+row format delimited
+fields terminated by ','
+stored as textfile;
+
+set hive.exec.dynamic.partition.mode=nonstrict;
+set hive.exec.dynamic.partition=true;
+
+set hive.enforce.bucketing=true;
+
+from txnrecords txn INSERT OVERWRITE TABLE txnrecsByCat2 PARTITION(category) 
+select txn.txnno,txn.txndate,txn.custno, txn.amount,txn.product,txn.city,txn.state,txn.spendby,txn.category DISTRIBUTE BY category;
+
+
+
+create table txnrecsByCat11(txnno int,txndate string,custno int,amount double,
+product string,city string,state string,spendby string)
+partitioned by (month string)
+row format delimited
+fields terminated by ','
+stored as textfile;
+
+from txnrecords txn INSERT OVERWRITE TABLE txnrecsByCat11 PARTITION(month)
+select txn.txnno,txn.txndate,txn.custno,txn.amount, txn.product, txn.city, txn.state, txn.spendby,substring(txn.txndate,1,2) as month DISTRIBUTE BY substring(txn.txndate,1,2);
+
+
+
+create table txnrecsByCat4(txnno int,txndate string,custno int, amount double,
+product string,city string,state string)
+partitioned by (category string,spendby string)
+row format delimited
+fields terminated by ','
+stored as textfile;
+
+
+from txnrecords txn INSERT OVERWRITE TABLE txnrecsByCat4 PARTITION(category,spendby)
+select txn.txnno, txn.txndate, txn.custno, txn.amount, txn.product, txn.city,txn.state, txn.category,txn.spendby
+DISTRIBUTE BY txn.category,txn.spendby;
+
+
+
+create table txnrecsByCat5(txnno int,txndate string,custno int,amount double,
+product string,city string,state string,spendby string)
+partitioned by (category string)
+row format delimited
+fields terminated by ','
+stored as textfile;
+
+from txnrecords txn INSERT OVERWRITE TABLE txnrecsByCat5 PARTITION(category="Gymnastics")
+select txn.txnno, txn.txndate, txn.custno, txn.amount, txn.product, txn.city, txn.state,txn.spendby
+where category="Gymnastics";
+
+
